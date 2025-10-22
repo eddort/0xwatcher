@@ -3,6 +3,7 @@ use alloy::{
     providers::Provider,
 };
 use eyre::Result;
+use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use std::time::Duration;
 
@@ -28,21 +29,66 @@ impl BalanceMonitorConfig {
 }
 
 /// Token balance
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TokenBalance {
     pub alias: String,
+    #[serde(with = "u256_serde")]
     pub balance: U256,
     pub formatted: String,
 }
 
 /// Balance check result
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BalanceInfo {
     pub alias: String,
+    #[serde(with = "address_serde")]
     pub address: Address,
+    #[serde(with = "u256_serde")]
     pub eth_balance: U256,
     pub eth_formatted: String,
     pub token_balances: Vec<TokenBalance>,
+}
+
+// Custom serialization for U256
+mod u256_serde {
+    use alloy::primitives::U256;
+    use serde::{Deserialize, Deserializer, Serializer};
+
+    pub fn serialize<S>(value: &U256, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&value.to_string())
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<U256, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        s.parse().map_err(serde::de::Error::custom)
+    }
+}
+
+// Custom serialization for Address
+mod address_serde {
+    use alloy::primitives::Address;
+    use serde::{Deserialize, Deserializer, Serializer};
+
+    pub fn serialize<S>(value: &Address, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&format!("{:?}", value))
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Address, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        s.parse().map_err(serde::de::Error::custom)
+    }
 }
 
 /// Balance monitoring

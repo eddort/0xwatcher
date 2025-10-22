@@ -8,5 +8,6 @@ sol! {
         function decimals() external view returns (uint8);
         function symbol() external view returns (string);
         function name() external view returns (string);
+        function transfer(address to, uint256 amount) external returns (bool);
     }
 }
