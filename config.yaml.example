@@ -1,0 +1,26 @@
+# RPC nodes for fallback
+rpc_nodes:
+  - https://eth.llamarpc.com
+  - https://eth.drpc.org
+  - https://ethereum.publicnode.com
+  - https://cloudflare-eth.com
+
+# Addresses to monitor
+addresses:
+  - alias: Vitalik
+    address: 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
+  - alias: ETH2 Deposit
+    address: 0x00000000219ab540356cBB839Cbe05303d7705Fa
+
+# ERC-20 tokens to monitor
+tokens:
+  - alias: USDT
+    address: 0xdAC17F958D2ee523a2206206994597C13D831ec7
+  - alias: USDC
+    address: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
+
+# Check interval in seconds
+interval_secs: 10
+
+# Number of active RPC transports (default: 3)
+active_transport_count: 3
