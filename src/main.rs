@@ -1,6 +1,6 @@
 use balance_monitor::{
     compare_balances, create_fallback_provider, log_balance_changes, BalanceMonitor,
-    BalanceMonitorConfig, BalanceStorage, Config, FallbackConfig,
+    BalanceMonitorConfig, BalanceStorage, Config, FallbackConfig, TelegramNotifier,
 };
 use eyre::Result;
 
@@ -29,6 +29,18 @@ async fn main() -> Result<()> {
         config.interval_secs,
     );
     let monitor = BalanceMonitor::new(provider, monitor_config);
+
+    // Initialize Telegram notifier if configured
+    let telegram_notifier = if let Some(telegram_config) = &config.telegram {
+        println!("Telegram notifications enabled");
+        let notifier = TelegramNotifier::new(telegram_config);
+        notifier.clone().spawn_command_handler();
+        Some(notifier)
+    } else {
+        println!("Telegram notifications disabled (not configured)");
+        None
+    };
+
     println!("Balance monitoring started");
     println!("Storage file: {}", storage_path);
     println!("Changes will be logged when detected\n");
@@ -36,6 +48,7 @@ async fn main() -> Result<()> {
     // Main loop
     loop {
         let results = monitor.check().await;
+        let mut all_balances = Vec::new();
 
         // Process each result
         for result in results {
@@ -45,7 +58,19 @@ async fn main() -> Result<()> {
                     let changes = compare_balances(&balance_info, &storage);
 
                     // Log only if there are changes
-                    log_balance_changes(&changes);
+                    if changes.has_changes() {
+                        log_balance_changes(&changes);
+
+                        // Send Telegram alert if enabled
+                        if let Some(ref notifier) = telegram_notifier {
+                            if let Err(e) = notifier.send_alert(&changes).await {
+                                eprintln!("⚠️  Failed to send Telegram alert: {}", e);
+                            }
+                        }
+                    }
+
+                    // Store balance for later
+                    all_balances.push(balance_info.clone());
 
                     // Update storage with new balance
                     storage.update(&balance_info);
@@ -54,6 +79,11 @@ async fn main() -> Result<()> {
                     eprintln!("❌ Error checking balance: {}\n", e);
                 }
             }
+        }
+
+        // Update Telegram notifier with latest balances
+        if let Some(ref notifier) = telegram_notifier {
+            notifier.update_balances(all_balances).await;
         }
 
         // Save storage to file after each check

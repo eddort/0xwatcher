@@ -24,3 +24,16 @@ interval_secs: 10
 
 # Number of active RPC transports (default: 3)
 active_transport_count: 3
+
+# Telegram configuration
+telegram:
+  # Bot token from @BotFather
+  # After starting the bot, send /start to register your chat for alerts
+  bot_token: "YOUR_BOT_TOKEN"
+
+  # List of allowed Telegram usernames (optional, without @)
+  # If list is empty or omitted, bot is public and anyone can use it
+  # If list has usernames, only those users can use the bot (private mode)
+  allowed_users:
+    - "username1"  # Replace with your Telegram username
+    # - "username2"  # Add more users if needed

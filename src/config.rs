@@ -12,6 +12,16 @@ pub struct AddressConfig {
 /// Token to monitor
 pub type TokenConfig = AddressConfig;
 
+/// Telegram configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TelegramConfig {
+    pub bot_token: String,
+    /// List of allowed Telegram usernames (without @)
+    /// If empty, bot is public and anyone can use it
+    #[serde(default)]
+    pub allowed_users: Vec<String>,
+}
+
 /// Application configuration from YAML
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
@@ -21,6 +31,7 @@ pub struct Config {
     pub interval_secs: u64,
     #[serde(default = "default_active_transport_count")]
     pub active_transport_count: usize,
+    pub telegram: Option<TelegramConfig>,
 }
 
 fn default_active_transport_count() -> usize {

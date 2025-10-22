@@ -27,6 +27,7 @@ pub struct TokenBalanceChange {
 #[derive(Debug)]
 pub struct BalanceChangeSummary {
     pub alias: String,
+    pub address: String,
     pub eth_change: Option<TokenBalanceChange>,
     pub token_changes: Vec<TokenBalanceChange>,
 }
@@ -115,6 +116,7 @@ pub fn compare_balances(
 
     BalanceChangeSummary {
         alias: current.alias.clone(),
+        address: format!("{:?}", current.address),
         eth_change,
         token_changes,
     }
@@ -126,41 +128,114 @@ pub fn log_balance_changes(change_summary: &BalanceChangeSummary) {
         return;
     }
 
-    println!("🔔 Changes detected for: {}", change_summary.alias);
+    println!("🔔 Balance Alert: {} ({})", change_summary.alias, shorten_address(&change_summary.address));
 
     // Log ETH changes
     if let Some(eth) = &change_summary.eth_change {
         if !matches!(eth.change, BalanceChange::NoChange) {
-            let symbol = match eth.change {
-                BalanceChange::Increase => "📈",
-                BalanceChange::Decrease => "📉",
-                BalanceChange::NoChange => "  ",
+            let (symbol, sign) = match eth.change {
+                BalanceChange::Increase => ("📈", "+"),
+                BalanceChange::Decrease => ("📉", ""),
+                BalanceChange::NoChange => ("  ", ""),
             };
-            println!("   {} ETH: {} → {}",
-                symbol,
-                eth.old_formatted,
-                eth.new_formatted
-            );
+
+            let diff = calculate_diff(&eth.new_balance, &eth.old_balance);
+            let percent = calculate_percent_change(&eth.new_balance, &eth.old_balance);
+
+            if percent.abs() >= 0.01 {
+                println!("   {} ETH: {}{} ({:+.2}%) | {} → {}",
+                    symbol,
+                    sign,
+                    diff,
+                    percent,
+                    eth.old_formatted,
+                    eth.new_formatted
+                );
+            } else {
+                println!("   {} ETH: {}{} | {} → {}",
+                    symbol,
+                    sign,
+                    diff,
+                    eth.old_formatted,
+                    eth.new_formatted
+                );
+            }
         }
     }
 
     // Log token changes
     for token in &change_summary.token_changes {
         if !matches!(token.change, BalanceChange::NoChange) {
-            let symbol = match token.change {
-                BalanceChange::Increase => "📈",
-                BalanceChange::Decrease => "📉",
-                BalanceChange::NoChange => "  ",
+            let (symbol, sign) = match token.change {
+                BalanceChange::Increase => ("📈", "+"),
+                BalanceChange::Decrease => ("📉", ""),
+                BalanceChange::NoChange => ("  ", ""),
             };
-            println!("   {} {}: {} → {}",
-                symbol,
-                token.alias,
-                token.old_formatted,
-                token.new_formatted
-            );
+
+            let diff = calculate_diff(&token.new_balance, &token.old_balance);
+            let percent = calculate_percent_change(&token.new_balance, &token.old_balance);
+
+            if percent.abs() >= 0.01 {
+                println!("   {} {}: {}{} ({:+.2}%) | {} → {}",
+                    symbol,
+                    token.alias,
+                    sign,
+                    diff,
+                    percent,
+                    token.old_formatted,
+                    token.new_formatted
+                );
+            } else {
+                println!("   {} {}: {}{} | {} → {}",
+                    symbol,
+                    token.alias,
+                    sign,
+                    diff,
+                    token.old_formatted,
+                    token.new_formatted
+                );
+            }
         }
     }
     println!();
+}
+
+/// Shorten address for display
+fn shorten_address(address: &str) -> String {
+    if address.len() > 10 {
+        format!("{}...{}", &address[..6], &address[address.len()-4..])
+    } else {
+        address.to_string()
+    }
+}
+
+/// Calculate difference between two U256 values
+fn calculate_diff(new: &U256, old: &U256) -> String {
+    use alloy::primitives::utils::format_units;
+
+    if new > old {
+        let diff = *new - *old;
+        format_units(diff, 18).unwrap_or_else(|_| diff.to_string())
+    } else {
+        let diff = *old - *new;
+        format_units(diff, 18).unwrap_or_else(|_| diff.to_string())
+    }
+}
+
+/// Calculate percent change
+fn calculate_percent_change(new: &U256, old: &U256) -> f64 {
+    if *old == U256::ZERO {
+        return 0.0;
+    }
+
+    let old_f64 = old.to_string().parse::<f64>().unwrap_or(0.0);
+    let new_f64 = new.to_string().parse::<f64>().unwrap_or(0.0);
+
+    if old_f64 == 0.0 {
+        return 0.0;
+    }
+
+    ((new_f64 - old_f64) / old_f64) * 100.0
 }
 
 /// Simple console logging
