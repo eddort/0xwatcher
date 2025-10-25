@@ -1,48 +1,68 @@
+use alloy::primitives::Address;
 use eyre::Result;
+use reqwest::Url;
 use serde::{Deserialize, Serialize};
+use serde_with::{serde_as, DurationSeconds};
 use std::fs;
+use std::num::NonZeroUsize;
+use std::time::Duration;
 
-/// Address with an alias
+/// Address configuration with alias
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AddressConfig {
     pub alias: String,
-    pub address: String,
+    pub address: Address,
 }
 
-/// Token to monitor
+/// Token configuration (same as address)
 pub type TokenConfig = AddressConfig;
 
 /// Telegram configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TelegramConfig {
     pub bot_token: String,
-    /// List of allowed Telegram usernames (without @)
-    /// If empty, bot is public and anyone can use it
     #[serde(default)]
     pub allowed_users: Vec<String>,
 }
 
-/// Application configuration from YAML
+fn default_active_transport_count() -> NonZeroUsize {
+    NonZeroUsize::new(3).unwrap()
+}
+
+#[serde_as]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
-    pub rpc_nodes: Vec<String>,
+    #[serde(rename = "rpc_nodes")]
+    pub rpc_urls: Vec<Url>,
     pub addresses: Vec<AddressConfig>,
+    #[serde(default)]
     pub tokens: Vec<TokenConfig>,
-    pub interval_secs: u64,
+    #[serde(rename = "interval_secs")]
+    #[serde_as(as = "DurationSeconds<u64>")]
+    pub interval: Duration,
     #[serde(default = "default_active_transport_count")]
-    pub active_transport_count: usize,
+    pub active_transport_count: NonZeroUsize,
     pub telegram: Option<TelegramConfig>,
 }
 
-fn default_active_transport_count() -> usize {
-    3
-}
-
 impl Config {
-    /// Load configuration from a YAML file
     pub fn from_file(path: &str) -> Result<Self> {
         let content = fs::read_to_string(path)?;
         let config: Config = serde_yaml::from_str(&content)?;
+
+        // Validation
+        if config.rpc_urls.is_empty() {
+            eyre::bail!("rpc_nodes list cannot be empty");
+        }
+        if config.addresses.is_empty() {
+            eyre::bail!("addresses list cannot be empty");
+        }
+        if let Some(ref telegram) = config.telegram {
+            if telegram.bot_token.is_empty() {
+                eyre::bail!("telegram bot_token cannot be empty");
+            }
+        }
+
         Ok(config)
     }
 }

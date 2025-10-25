@@ -4,7 +4,6 @@ use alloy::{
 };
 use eyre::Result;
 use serde::{Deserialize, Serialize};
-use std::str::FromStr;
 use std::time::Duration;
 
 use crate::config::{AddressConfig, TokenConfig};
@@ -15,15 +14,15 @@ use crate::contracts::IERC20;
 pub struct BalanceMonitorConfig {
     pub addresses: Vec<AddressConfig>,
     pub tokens: Vec<TokenConfig>,
-    pub interval_secs: u64,
+    pub interval: Duration,
 }
 
 impl BalanceMonitorConfig {
-    pub fn new(addresses: Vec<AddressConfig>, tokens: Vec<TokenConfig>, interval_secs: u64) -> Self {
+    pub fn new(addresses: Vec<AddressConfig>, tokens: Vec<TokenConfig>, interval: Duration) -> Self {
         Self {
             addresses,
             tokens,
-            interval_secs,
+            interval,
         }
     }
 }
@@ -111,8 +110,7 @@ impl<P: Provider> BalanceMonitor<P> {
     // Token balances
         let mut token_balances = Vec::new();
         for token in &self.config.tokens {
-            let token_address = Address::from_str(&token.address)?;
-            let token_contract = IERC20::new(token_address, &self.provider);
+            let token_contract = IERC20::new(token.address, &self.provider);
 
             match token_contract.balanceOf(address).call().await {
                 Ok(balance) => {
@@ -145,15 +143,8 @@ impl<P: Provider> BalanceMonitor<P> {
         let mut results = Vec::new();
 
         for addr_config in &self.config.addresses {
-            match Address::from_str(&addr_config.address) {
-                Ok(address) => {
-                    let result = self.get_balance(addr_config.alias.clone(), address).await;
-                    results.push(result);
-                }
-                Err(e) => {
-                    results.push(Err(e.into()));
-                }
-            }
+            let result = self.get_balance(addr_config.alias.clone(), addr_config.address).await;
+            results.push(result);
         }
 
         results
@@ -161,6 +152,6 @@ impl<P: Provider> BalanceMonitor<P> {
 
     /// Check interval from configuration
     pub fn interval(&self) -> Duration {
-        Duration::from_secs(self.config.interval_secs)
+        self.config.interval
     }
 }

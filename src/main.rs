@@ -17,7 +17,7 @@ async fn main() -> Result<()> {
 
     // Create provider
     let provider_config = FallbackConfig::new(
-        config.rpc_nodes.clone(),
+        config.rpc_urls.clone(),
         config.active_transport_count,
     );
     let provider = create_fallback_provider(provider_config)?;
@@ -26,7 +26,7 @@ async fn main() -> Result<()> {
     let monitor_config = BalanceMonitorConfig::new(
         config.addresses,
         config.tokens,
-        config.interval_secs,
+        config.interval,
     );
     let monitor = BalanceMonitor::new(provider, monitor_config);
 
