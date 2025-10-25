@@ -194,8 +194,9 @@ impl TelegramNotifier {
     fn format_change_message(&self, changes: &BalanceChangeSummary) -> String {
         let mut message = format!("🔔 <b>Balance Alert</b>\n\n");
 
-        // Address with shortened format
+        // Network and address with shortened format
         let short_addr = Self::shorten_address(&changes.address);
+        message.push_str(&format!("🌐 <b>{}</b> (Chain ID: {})\n", changes.network_name, changes.chain_id));
         message.push_str(&format!("📍 <b>{}</b>\n", changes.alias));
         message.push_str(&format!("<code>{}</code>\n\n", short_addr));
 
@@ -294,6 +295,7 @@ impl TelegramNotifier {
 
         for balance in balances {
             let short_addr = Self::shorten_address(&format!("{:?}", balance.address));
+            message.push_str(&format!("🌐 <b>{}</b> (Chain ID: {})\n", balance.network_name, balance.chain_id));
             message.push_str(&format!("📍 <b>{}</b>\n", balance.alias));
             message.push_str(&format!("<code>{}</code>\n\n", short_addr));
 

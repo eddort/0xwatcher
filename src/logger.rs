@@ -26,6 +26,8 @@ pub struct TokenBalanceChange {
 /// Balance change summary for an address
 #[derive(Debug)]
 pub struct BalanceChangeSummary {
+    pub network_name: String,
+    pub chain_id: u64,
     pub alias: String,
     pub address: String,
     pub eth_change: Option<TokenBalanceChange>,
@@ -54,7 +56,7 @@ pub fn compare_balances(
     let mut eth_change = None;
     let mut token_changes = Vec::new();
 
-    if let Some(previous) = storage.get(&current.alias) {
+    if let Some(previous) = storage.get(&current.network_name, &current.alias) {
         // Compare ETH balance
         let change = if current.eth_balance > previous.eth_balance {
             BalanceChange::Increase
@@ -115,6 +117,8 @@ pub fn compare_balances(
     }
 
     BalanceChangeSummary {
+        network_name: current.network_name.clone(),
+        chain_id: current.chain_id,
         alias: current.alias.clone(),
         address: format!("{:?}", current.address),
         eth_change,
@@ -128,7 +132,12 @@ pub fn log_balance_changes(change_summary: &BalanceChangeSummary) {
         return;
     }
 
-    println!("🔔 Balance Alert: {} ({})", change_summary.alias, shorten_address(&change_summary.address));
+    println!(
+        "🔔 Balance Alert [{}]: {} ({})",
+        change_summary.network_name,
+        change_summary.alias,
+        shorten_address(&change_summary.address)
+    );
 
     // Log ETH changes
     if let Some(eth) = &change_summary.eth_change {
@@ -245,7 +254,7 @@ pub fn log_balances(results: &[Result<BalanceInfo>]) {
     for result in results {
         match result {
             Ok(info) => {
-                println!("📌 {} ({})", info.alias, info.address);
+                println!("📌 [{}] {} ({})", info.network_name, info.alias, info.address);
                 println!("   ETH: {}", info.eth_formatted);
 
                 for token_balance in &info.token_balances {
@@ -272,6 +281,8 @@ pub fn log_balances_json(results: &[Result<BalanceInfo>]) -> Result<()> {
             }
 
             let log = json!({
+                "network": info.network_name,
+                "chain_id": info.chain_id,
                 "alias": info.alias,
                 "address": format!("{}", info.address),
                 "eth": info.eth_formatted,

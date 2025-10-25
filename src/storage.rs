@@ -8,7 +8,7 @@ use std::path::Path;
 /// Storage for balance snapshots
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BalanceStorage {
-    /// Map of address alias to balance info
+    /// Map of "network:alias" to balance info
     pub balances: HashMap<String, BalanceInfo>,
 }
 
@@ -40,14 +40,21 @@ impl BalanceStorage {
         Ok(())
     }
 
-    /// Update with new balance info
-    pub fn update(&mut self, info: &BalanceInfo) {
-        self.balances.insert(info.alias.clone(), info.clone());
+    /// Generate storage key from network name and alias
+    fn make_key(network_name: &str, alias: &str) -> String {
+        format!("{}:{}", network_name, alias)
     }
 
-    /// Get previous balance by alias
-    pub fn get(&self, alias: &str) -> Option<&BalanceInfo> {
-        self.balances.get(alias)
+    /// Update with new balance info
+    pub fn update(&mut self, info: &BalanceInfo) {
+        let key = Self::make_key(&info.network_name, &info.alias);
+        self.balances.insert(key, info.clone());
+    }
+
+    /// Get previous balance by network name and alias
+    pub fn get(&self, network_name: &str, alias: &str) -> Option<&BalanceInfo> {
+        let key = Self::make_key(network_name, alias);
+        self.balances.get(&key)
     }
 }
 

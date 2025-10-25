@@ -25,6 +25,17 @@ pub struct TelegramConfig {
     pub allowed_users: Vec<String>,
 }
 
+/// Network configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NetworkConfig {
+    pub name: String,
+    pub chain_id: u64,
+    pub rpc_nodes: Vec<Url>,
+    pub addresses: Vec<AddressConfig>,
+    #[serde(default)]
+    pub tokens: Vec<TokenConfig>,
+}
+
 fn default_active_transport_count() -> NonZeroUsize {
     NonZeroUsize::new(3).unwrap()
 }
@@ -32,11 +43,7 @@ fn default_active_transport_count() -> NonZeroUsize {
 #[serde_as]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
-    #[serde(rename = "rpc_nodes")]
-    pub rpc_urls: Vec<Url>,
-    pub addresses: Vec<AddressConfig>,
-    #[serde(default)]
-    pub tokens: Vec<TokenConfig>,
+    pub networks: Vec<NetworkConfig>,
     #[serde(rename = "interval_secs")]
     #[serde_as(as = "DurationSeconds<u64>")]
     pub interval: Duration,
@@ -51,12 +58,22 @@ impl Config {
         let config: Config = serde_yaml::from_str(&content)?;
 
         // Validation
-        if config.rpc_urls.is_empty() {
-            eyre::bail!("rpc_nodes list cannot be empty");
+        if config.networks.is_empty() {
+            eyre::bail!("networks list cannot be empty");
         }
-        if config.addresses.is_empty() {
-            eyre::bail!("addresses list cannot be empty");
+
+        for network in &config.networks {
+            if network.name.is_empty() {
+                eyre::bail!("network name cannot be empty");
+            }
+            if network.rpc_nodes.is_empty() {
+                eyre::bail!("rpc_nodes list cannot be empty for network '{}'", network.name);
+            }
+            if network.addresses.is_empty() {
+                eyre::bail!("addresses list cannot be empty for network '{}'", network.name);
+            }
         }
+
         if let Some(ref telegram) = config.telegram {
             if telegram.bot_token.is_empty() {
                 eyre::bail!("telegram bot_token cannot be empty");

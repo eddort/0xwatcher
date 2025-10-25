@@ -1,39 +1,57 @@
-# RPC nodes for fallback
-rpc_nodes:
-  - https://eth.llamarpc.com
-  - https://eth.drpc.org
-  - https://ethereum.publicnode.com
-  - https://cloudflare-eth.com
+# Global settings (optional with defaults)
+interval_secs: 60  # Check interval in seconds (default: 60)
+active_transport_count: 3  # Number of concurrent RPC connections (default: 3)
 
-# Addresses to monitor
-addresses:
-  - alias: Vitalik
-    address: 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
-  - alias: ETH2 Deposit
-    address: 0x00000000219ab540356cBB839Cbe05303d7705Fa
-
-# ERC-20 tokens to monitor
-tokens:
-  - alias: USDT
-    address: 0xdAC17F958D2ee523a2206206994597C13D831ec7
-  - alias: USDC
-    address: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
-
-# Check interval in seconds
-interval_secs: 10
-
-# Number of active RPC transports (default: 3)
-active_transport_count: 3
-
-# Telegram configuration
+# Telegram configuration (optional)
 telegram:
-  # Bot token from @BotFather
-  # After starting the bot, send /start to register your chat for alerts
-  bot_token: "YOUR_BOT_TOKEN"
+  bot_token: "YOUR_BOT_TOKEN_HERE"  # Get from @BotFather
+  allowed_users:  # Optional: limit bot access to specific users
+    - "your_telegram_username"  # Without @
 
-  # List of allowed Telegram usernames (optional, without @)
-  # If list is empty or omitted, bot is public and anyone can use it
-  # If list has usernames, only those users can use the bot (private mode)
-  allowed_users:
-    - "username1"  # Replace with your Telegram username
-    # - "username2"  # Add more users if needed
+# Networks to monitor (required)
+networks:
+  # Ethereum Mainnet
+  - name: Ethereum
+    chain_id: 1
+    rpc_nodes:
+      - https://eth.llamarpc.com
+      - https://eth.drpc.org
+      - https://ethereum.publicnode.com
+      - https://cloudflare-eth.com
+    addresses:
+      - alias: Vitalik
+        address: 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
+      - alias: ETH2 Deposit
+        address: 0x00000000219ab540356cBB839Cbe05303d7705Fa
+    tokens:
+      - alias: USDT
+        address: 0xdAC17F958D2ee523a2206206994597C13D831ec7
+      - alias: USDC
+        address: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
+
+  # BSC Network
+  - name: BSC
+    chain_id: 56
+    rpc_nodes:
+      - https://bsc-dataseed.binance.org
+      - https://bsc-dataseed1.defibit.io
+      - https://bsc-dataseed2.defibit.io
+    addresses:
+      - alias: MyWallet
+        address: 0x0000000000000000000000000000000000000000
+    tokens:
+      - alias: BUSD
+        address: 0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56
+      - alias: USDT
+        address: 0x55d398326f99059fF775485246999027B3197955
+
+  # Polygon Network
+  - name: Polygon
+    chain_id: 137
+    rpc_nodes:
+      - https://polygon-rpc.com
+      - https://rpc-mainnet.matic.network
+    addresses:
+      - alias: MyWallet
+        address: 0x0000000000000000000000000000000000000000
+    tokens: []  # No tokens to monitor

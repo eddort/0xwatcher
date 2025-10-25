@@ -39,6 +39,8 @@ pub struct TokenBalance {
 /// Balance check result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BalanceInfo {
+    pub network_name: String,
+    pub chain_id: u64,
     pub alias: String,
     #[serde(with = "address_serde")]
     pub address: Address,
@@ -102,12 +104,18 @@ impl<P: Provider> BalanceMonitor<P> {
     }
 
     /// Get balance for a single address
-    pub async fn get_balance(&self, alias: String, address: Address) -> Result<BalanceInfo> {
-    // ETH balance
+    pub async fn get_balance(
+        &self,
+        network_name: String,
+        chain_id: u64,
+        alias: String,
+        address: Address,
+    ) -> Result<BalanceInfo> {
+        // ETH balance
         let eth_balance = self.provider.get_balance(address).await?;
         let eth_formatted = format_units(eth_balance, "ether")?;
 
-    // Token balances
+        // Token balances
         let mut token_balances = Vec::new();
         for token in &self.config.tokens {
             let token_contract = IERC20::new(token.address, &self.provider);
@@ -130,6 +138,8 @@ impl<P: Provider> BalanceMonitor<P> {
         }
 
         Ok(BalanceInfo {
+            network_name,
+            chain_id,
             alias,
             address,
             eth_balance,
@@ -139,11 +149,18 @@ impl<P: Provider> BalanceMonitor<P> {
     }
 
     /// Check balances for all addresses
-    pub async fn check(&self) -> Vec<Result<BalanceInfo>> {
+    pub async fn check(&self, network_name: String, chain_id: u64) -> Vec<Result<BalanceInfo>> {
         let mut results = Vec::new();
 
         for addr_config in &self.config.addresses {
-            let result = self.get_balance(addr_config.alias.clone(), addr_config.address).await;
+            let result = self
+                .get_balance(
+                    network_name.clone(),
+                    chain_id,
+                    addr_config.alias.clone(),
+                    addr_config.address,
+                )
+                .await;
             results.push(result);
         }
 

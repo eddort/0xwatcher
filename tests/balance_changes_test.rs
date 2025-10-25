@@ -32,6 +32,8 @@ async fn test_eth_balance_changes_detection() -> Result<()> {
 
     // Create initial balance info
     let initial_info = BalanceInfo {
+        network_name: "Ethereum".to_string(),
+        chain_id: 1,
         alias: "rich_account".to_string(),
         address: account,
         eth_balance: balance_initial,
@@ -57,6 +59,8 @@ async fn test_eth_balance_changes_detection() -> Result<()> {
 
     // Create new balance info
     let new_info = BalanceInfo {
+        network_name: "Ethereum".to_string(),
+        chain_id: 1,
         alias: "rich_account".to_string(),
         address: account,
         eth_balance: balance_new,
@@ -100,6 +104,8 @@ async fn test_token_balance_changes_detection() -> Result<()> {
 
     // Create initial balance info
     let initial_info = BalanceInfo {
+        network_name: "Ethereum".to_string(),
+        chain_id: 1,
         alias: "rich_account".to_string(),
         address: account,
         eth_balance: U256::ZERO,
@@ -130,6 +136,8 @@ async fn test_token_balance_changes_detection() -> Result<()> {
 
     // Create new balance info
     let new_info = BalanceInfo {
+        network_name: "Ethereum".to_string(),
+        chain_id: 1,
         alias: "rich_account".to_string(),
         address: account,
         eth_balance: U256::ZERO,
@@ -175,6 +183,8 @@ async fn test_no_changes_detection() -> Result<()> {
 
     // Create balance info
     let info = BalanceInfo {
+        network_name: "Ethereum".to_string(),
+        chain_id: 1,
         alias: "account".to_string(),
         address: account,
         eth_balance: balance,
