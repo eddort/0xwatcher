@@ -19,6 +19,42 @@ A Rust-based blockchain balance monitoring tool with Telegram notifications. Sup
 
 ## Installation
 
+### Option 1: Download Pre-built Binary (Recommended)
+
+Download the latest release for your platform:
+
+**Linux (x86_64):**
+```bash
+curl -L https://github.com/YOUR_USERNAME/oxwatcher/releases/latest/download/oxwatcher-linux-x86_64.tar.gz | tar xz
+chmod +x oxwatcher
+sudo mv oxwatcher /usr/local/bin/
+```
+
+**Linux (ARM64):**
+```bash
+curl -L https://github.com/YOUR_USERNAME/oxwatcher/releases/latest/download/oxwatcher-linux-aarch64.tar.gz | tar xz
+chmod +x oxwatcher
+sudo mv oxwatcher /usr/local/bin/
+```
+
+**macOS (Intel):**
+```bash
+curl -L https://github.com/YOUR_USERNAME/oxwatcher/releases/latest/download/oxwatcher-macos-x86_64.tar.gz | tar xz
+chmod +x oxwatcher
+sudo mv oxwatcher /usr/local/bin/
+```
+
+**macOS (Apple Silicon):**
+```bash
+curl -L https://github.com/YOUR_USERNAME/oxwatcher/releases/latest/download/oxwatcher-macos-aarch64.tar.gz | tar xz
+chmod +x oxwatcher
+sudo mv oxwatcher /usr/local/bin/
+```
+
+Replace `YOUR_USERNAME` with your GitHub username.
+
+### Option 2: Build from Source
+
 1. Clone the repository
 2. Build the project:
 ```bash
