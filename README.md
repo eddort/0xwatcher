@@ -14,51 +14,47 @@ A Rust-based blockchain balance monitoring tool with Telegram notifications. Sup
 
 ## Prerequisites
 
+### For Docker (Recommended)
+- Docker and Docker Compose
+- Telegram Bot Token (get from [@BotFather](https://t.me/BotFather))
+
+### For Building from Source
 - Rust 1.70 or higher
 - Telegram Bot Token (get from [@BotFather](https://t.me/BotFather))
 
 ## Installation
 
-### Option 1: Download Pre-built Binary (Recommended)
+### Docker Compose (Recommended)
 
-Download the latest release for your platform:
-
-**Linux (x86_64):**
 ```bash
-curl -L https://github.com/YOUR_USERNAME/oxwatcher/releases/latest/download/oxwatcher-linux-x86_64.tar.gz | tar xz
-chmod +x oxwatcher
-sudo mv oxwatcher /usr/local/bin/
+# Clone the repository
+git clone https://github.com/eddort/0xwatcher.git
+cd 0xwatcher
+
+# Create config from example
+cp config.example.yaml config.yaml
+# Edit config.yaml with your settings
+# IMPORTANT: Set data_dir: "/app/data" for Docker
+
+# Start the service
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
 ```
 
-**Linux (ARM64):**
+The `docker-compose.yml` pulls the image from GitHub Container Registry automatically. To build locally instead, uncomment the `build` section in `docker-compose.yml`.
+
+### Build from Source
+
 ```bash
-curl -L https://github.com/YOUR_USERNAME/oxwatcher/releases/latest/download/oxwatcher-linux-aarch64.tar.gz | tar xz
-chmod +x oxwatcher
-sudo mv oxwatcher /usr/local/bin/
-```
+# Clone the repository
+git clone https://github.com/eddort/0xwatcher.git
+cd 0xwatcher
 
-**macOS (Intel):**
-```bash
-curl -L https://github.com/YOUR_USERNAME/oxwatcher/releases/latest/download/oxwatcher-macos-x86_64.tar.gz | tar xz
-chmod +x oxwatcher
-sudo mv oxwatcher /usr/local/bin/
-```
-
-**macOS (Apple Silicon):**
-```bash
-curl -L https://github.com/YOUR_USERNAME/oxwatcher/releases/latest/download/oxwatcher-macos-aarch64.tar.gz | tar xz
-chmod +x oxwatcher
-sudo mv oxwatcher /usr/local/bin/
-```
-
-Replace `YOUR_USERNAME` with your GitHub username.
-
-### Option 2: Build from Source
-
-1. Clone the repository
-2. Build the project:
-```bash
+# Build and run
 cargo build --release
+./target/release/Oxwatcher
 ```
 
 ## Configuration
@@ -162,15 +158,22 @@ Alerts reset when balance goes back above threshold.
 
 ## Running the Monitor
 
-### Development Mode
+### With Docker
 
 ```bash
-cargo run
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
 ```
 
-### Production Mode
+### From Source
 
 ```bash
+# Development
+cargo run
+
+# Production
 cargo build --release
 ./target/release/Oxwatcher
 ```
@@ -186,11 +189,11 @@ After starting the bot, users can interact with it using these commands:
 
 ## File Structure
 
-The application creates the following files:
-
-- `balances.json` - Stores last known balances for change detection
-- `telegram_chats.json` - Stores registered Telegram chats
-- `alert_states.json` - Stores low balance alert throttling state
+- `config.yaml` - Configuration file (set `data_dir: "/app/data"` for Docker or `data_dir: "."` for local)
+- `data_dir/` - Directory for state files (created automatically):
+  - `balances.json` - Balance history
+  - `telegram_chats.json` - Registered Telegram chats
+  - `alert_states.json` - Alert throttling state
 
 ## Example Configuration
 

@@ -11,20 +11,25 @@ use tokio::sync::RwLock;
 #[tokio::main]
 async fn main() -> Result<()> {
     let config_path = "config.yaml";
-    let storage_path = "balances.json";
 
     // Load configuration
     let config = Config::from_file(config_path)?;
+
+    // Create data directory if it doesn't exist
+    std::fs::create_dir_all(&config.data_dir)?;
+
+    // Build storage path using data_dir from config
+    let storage_path = format!("{}/balances.json", config.data_dir);
 
     // Print startup banner
     print_startup_banner(&config);
 
     // Load previous balance storage
-    let storage = Arc::new(RwLock::new(BalanceStorage::load_from_file(storage_path)?));
+    let storage = Arc::new(RwLock::new(BalanceStorage::load_from_file(&storage_path)?));
 
     // Initialize Telegram notifier if configured
     let telegram_notifier = if let Some(telegram_config) = &config.telegram {
-        let notifier = TelegramNotifier::new(telegram_config, Arc::clone(&storage));
+        let notifier = TelegramNotifier::new(telegram_config, Arc::clone(&storage), &config.data_dir);
 
         // Count loaded chats
         let loaded_chats = notifier.get_registered_chats_count().await;
@@ -46,6 +51,7 @@ async fn main() -> Result<()> {
     };
 
     println!("✅ Balance monitoring started");
+    println!("💾 Data directory: {}", config.data_dir);
     println!("💾 Storage file: {}", storage_path);
     println!();
 

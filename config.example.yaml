@@ -1,6 +1,8 @@
 # Global settings (optional with defaults)
 interval_secs: 60  # Check interval in seconds (default: 60)
 active_transport_count: 3  # Number of concurrent RPC connections (default: 3)
+data_dir: "data"  # Directory for storing state files (default: current directory)
+               # For Docker: use "/app/data"
 
 # Telegram configuration (optional)
 telegram:

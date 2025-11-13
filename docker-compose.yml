@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  oxwatcher:
+    image: ghcr.io/eddort/0xwatcher:latest
+    container_name: oxwatcher
+    restart: unless-stopped
+
+    volumes:
+      # Mount your config file (make sure data_dir is set to "/app/data" in config.yaml)
+      - ./config.yaml:/app/config.yaml:ro
+      # Persist all state files (balances.json, telegram_chats.json, alert_states.json)
+      - ./data:/app/data
+
+    # If you want to build locally instead of using the registry image:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    environment:
+      - RUST_LOG=info

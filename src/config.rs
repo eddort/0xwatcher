@@ -106,6 +106,13 @@ pub struct Config {
     #[serde(default = "default_active_transport_count")]
     pub active_transport_count: NonZeroUsize,
     pub telegram: Option<TelegramConfig>,
+    /// Directory for storing state files (balances.json, telegram_chats.json, alert_states.json)
+    #[serde(default = "default_data_dir")]
+    pub data_dir: String,
+}
+
+fn default_data_dir() -> String {
+    ".".to_string()
 }
 
 impl Config {

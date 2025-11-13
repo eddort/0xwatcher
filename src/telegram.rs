@@ -170,9 +170,9 @@ pub struct TelegramNotifier {
 }
 
 impl TelegramNotifier {
-    pub fn new(config: &TelegramConfig, balance_storage: Arc<RwLock<BalanceStorage>>) -> Self {
+    pub fn new(config: &TelegramConfig, balance_storage: Arc<RwLock<BalanceStorage>>, data_dir: &str) -> Self {
         let bot = Bot::new(&config.bot_token);
-        let storage_path = "telegram_chats.json".to_string();
+        let storage_path = format!("{}/telegram_chats.json", data_dir);
 
         // Load previously registered chats
         let storage = ChatStorage::load_from_file(&storage_path);
@@ -187,7 +187,7 @@ impl TelegramNotifier {
             .map(|reg| (ChatId(reg.chat_id), reg))
             .collect();
 
-        let alert_state_path = "alert_states.json".to_string();
+        let alert_state_path = format!("{}/alert_states.json", data_dir);
         let alert_state_storage = AlertStateStorage::load_from_file(&alert_state_path);
 
         Self {

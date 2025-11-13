@@ -1,0 +1,37 @@
+# Build artifacts
+target/
+**/target/
+
+# Config and data files
+config.yaml
+balances.json
+
+# Git
+.git/
+.gitignore
+
+# GitHub
+.github/
+
+# Documentation
+README.md
+*.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# CI/CD
+.gitlab-ci.yml
+
+# OS files
+.DS_Store
+Thumbs.db
