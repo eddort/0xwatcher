@@ -6,7 +6,7 @@ pub mod providers;
 pub mod storage;
 pub mod telegram;
 
-pub use config::{AddressConfig, Config, NetworkConfig, TelegramConfig, TokenConfig};
+pub use config::{AddressConfig, AlertSettings, Config, DailyReportConfig, NetworkConfig, TelegramConfig, TokenConfig};
 pub use contracts::IERC20;
 pub use logger::{compare_balances, log_balance_changes, log_balances, log_balances_json};
 pub use monitoring::{BalanceInfo, BalanceMonitor, BalanceMonitorConfig, TokenBalance};

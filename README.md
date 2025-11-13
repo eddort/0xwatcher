@@ -1,319 +1,279 @@
 # Balance Monitor
 
-Scalable monitoring of Ethereum address balances in Rust using Alloy v1.0.
+A Rust-based blockchain balance monitoring tool with Telegram notifications. Supports multiple EVM-compatible networks with fallback RPC endpoints and intelligent alert throttling.
 
+## Features
 
-## Project structure
+- Multi-network support (Ethereum, Polygon, Gnosis, etc.)
+- Multiple RPC fallback for high availability
+- ERC20 token balance monitoring
+- Telegram bot integration with customizable alerts
+- Low balance alerts with smart throttling
+- Daily balance diff reports
+- Balance change notifications
+- Persistent state management
 
+## Prerequisites
+
+- Rust 1.70 or higher
+- Telegram Bot Token (get from [@BotFather](https://t.me/BotFather))
+
+## Installation
+
+1. Clone the repository
+2. Build the project:
+```bash
+cargo build --release
 ```
-src/
-├── main.rs              # Entry point with logging
-├── lib.rs               # Public API
-├── config.rs            # Load configuration from YAML
-├── logger.rs            # Logging module
-├── contracts/           # Smart contract definitions
-│   ├── mod.rs
-│   └── erc20.rs         # ERC-20 interface
-├── providers/           # RPC providers
-│   ├── mod.rs
-│   └── fallback.rs      # Fallback provider
-└── monitoring/          # Monitoring logic (no logging)
-    ├── mod.rs
-    # Balance Monitor
 
-    Scalable monitoring of Ethereum address balances in Rust using Alloy v1.0.
+## Configuration
 
-    ## Features
+Create a `config.yaml` file in the project root. See `config.example.yaml` for reference.
 
-    - 🔄 **Fallback provider** - automatic switching between RPC nodes
-    - 💰 **ETH + ERC-20** - monitor native ETH and any tokens
-    - 🏷️ **Aliases** - friendly names for addresses and tokens
-    - ⚙️ **YAML configuration** - single source of truth
-    - 📦 **Modular architecture** - separation of logic and logging
-    - 📝 **Flexible logging** - console, JSON, or custom format
+### Configuration Structure
 
-    ## Project structure
+#### Global Settings
 
-    ```
-    src/
-    ├── main.rs              # Entry point with logging
-    ├── lib.rs               # Public API
-    ├── config.rs            # Load configuration from YAML
-    ├── logger.rs            # Logging module
-    ├── contracts/           # Smart contract definitions
-    │   ├── mod.rs
-    │   └── erc20.rs         # ERC-20 interface
-    ├── providers/           # RPC providers
-    │   ├── mod.rs
-    │   └── fallback.rs      # Fallback provider
-    └── monitoring/          # Monitoring logic (no logging)
-        ├── mod.rs
-        └── balance.rs       # Monitoring logic
-    ```
+```yaml
+interval_secs: 60              # Balance check interval in seconds (default: 60)
+active_transport_count: 3      # Number of concurrent RPC connections (default: 3)
+```
 
-    ## Quick start
+- `interval_secs`: How often to check balances. Lower values = more frequent checks but higher RPC usage.
+- `active_transport_count`: Number of concurrent RPC connections for fallback system. Higher values improve reliability.
 
-    ### 1. Create a configuration file
+#### Telegram Configuration
 
-    ```bash
-    cp config.yaml.example config.yaml
-    ```
+```yaml
+telegram:
+  bot_token: "YOUR_BOT_TOKEN"
+  allowed_users:
+    - "username1"
+    - "username2"
+    # OR use "all" for public access:
+    # - "all"
 
-    Edit `config.yaml`:
+  alerts:
+    balance_change: true
+    low_balance: true
 
-    ```yaml
-    # RPC nodes for fallback
+  daily_report:
+    enabled: true
+    time: "09:00"
+
+  show_full_address: false
+```
+
+**Fields:**
+
+- `bot_token` (required): Your Telegram bot token from @BotFather
+- `allowed_users` (optional): List of authorized Telegram usernames (without @)
+  - Use `["all"]` to allow anyone to use the bot
+  - Leave empty or specify usernames for private mode
+- `alerts.balance_change` (default: true): Send alerts when balance changes are detected
+- `alerts.low_balance` (default: true): Send alerts when balance drops below threshold
+- `daily_report.enabled` (default: false): Enable daily balance diff reports
+- `daily_report.time`: Time to send daily report in HH:MM format (24-hour)
+- `show_full_address` (default: false): Display full addresses or shortened format (0xabcd...1234)
+
+#### Network Configuration
+
+```yaml
+networks:
+  - name: Ethereum
+    chain_id: 1
     rpc_nodes:
       - https://eth.llamarpc.com
       - https://eth.drpc.org
       - https://ethereum.publicnode.com
-
-    # Addresses to monitor
     addresses:
-      - alias: My Wallet
-        address: 0xYourAddress
-
-    # ERC-20 tokens to monitor
+      - alias: MyWallet
+        address: 0xYourAddressHere
+        min_balance_eth: 1.0
     tokens:
       - alias: USDT
         address: 0xdAC17F958D2ee523a2206206994597C13D831ec7
+        min_balance: 100.0
+```
 
-    # Check interval (seconds)
-    interval_secs: 10
+**Fields:**
 
-    # Number of active RPC transports
-    active_transport_count: 3
-    ```
+- `name` (required): Network display name
+- `chain_id` (required): Network chain ID (1 for Ethereum, 137 for Polygon, etc.)
+- `rpc_nodes` (required): List of RPC endpoints
+  - First node is primary, others are fallbacks
+  - System automatically switches on failure
+  - Only HTTP/HTTPS endpoints supported (no WebSocket)
+- `addresses` (required): List of addresses to monitor
+  - `alias`: Human-readable name for the address
+  - `address`: Ethereum address to monitor
+  - `min_balance_eth` (optional): ETH balance threshold for low balance alerts
+- `tokens` (optional): List of ERC20 tokens to monitor
+  - `alias`: Token name (e.g., USDT, USDC)
+  - `address`: Token contract address
+  - `min_balance` (optional): Token balance threshold for low balance alerts
 
-    ### 2. Run monitoring
+### Low Balance Alert Throttling
 
-    ```bash
-    cargo run
-    ```
+When balance drops below threshold, alerts are sent with increasing intervals to prevent spam:
 
-    Output:
+1. Alert #1: Immediate
+2. Alert #2: 10 minutes later
+3. Alert #3: 1 hour later
+4. Alert #4: 5 hours later
+5. Alert #5+: Every 20 hours
 
-    ```
-    Monitoring started
-    Tracked addresses: 1
-    Tokens: 2
-    Interval: 10 sec
+Alerts reset when balance goes back above threshold.
 
-    === Balance Check ===
+## Running the Monitor
 
-    📌 My Wallet (0xYour...)
-       ETH: 1.234567
-       USDT: 500.00
-    ```
+### Development Mode
 
-    ## Configuration
+```bash
+cargo run
+```
 
-    ### RPC nodes
+### Production Mode
 
-    Add multiple RPC endpoints for resiliency:
+```bash
+cargo build --release
+./target/release/balance-monitor
+```
 
-    ```yaml
+## Telegram Bot Commands
+
+After starting the bot, users can interact with it using these commands:
+
+- `/start` - Register for alerts
+- `/balance` - Show current balances
+- `/report` - Get on-demand balance diff report
+- `/help` - Show help message
+
+## File Structure
+
+The application creates the following files:
+
+- `balances.json` - Stores last known balances for change detection
+- `telegram_chats.json` - Stores registered Telegram chats
+- `alert_states.json` - Stores low balance alert throttling state
+
+## Example Configuration
+
+### Ethereum Mainnet Only
+
+```yaml
+interval_secs: 60
+active_transport_count: 3
+
+telegram:
+  bot_token: "1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
+  allowed_users:
+    - "your_username"
+  alerts:
+    balance_change: false
+    low_balance: true
+  daily_report:
+    enabled: true
+    time: "09:00"
+
+networks:
+  - name: Ethereum
+    chain_id: 1
     rpc_nodes:
       - https://eth.llamarpc.com
-      - https://rpc.ankr.com/eth
-      - https://ethereum.publicnode.com
-      - https://cloudflare-eth.com
-    ```
-
-    ### Addresses
-
-    Each address has an alias for convenience:
-
-    ```yaml
+      - https://eth.drpc.org
     addresses:
-      - alias: Personal Wallet
-        address: 0x...
-      - alias: Trading Wallet
-        address: 0x...
-      - alias: Cold Storage
-        address: 0x...
-    ```
-
-    ### Tokens
-
-    Add any ERC-20 tokens:
-
-    ```yaml
+      - alias: Main Wallet
+        address: 0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb
+        min_balance_eth: 0.5
     tokens:
       - alias: USDC
         address: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
-      - alias: DAI
-        address: 0x6B175474E89094C44Da98b954EedeAC495271d0F
-      - alias: WETH
-        address: 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
-    ```
+        min_balance: 1000.0
+```
 
-    ## Using as a library
+### Multi-Network Setup
 
-    ### Basic example
+```yaml
+interval_secs: 30
+active_transport_count: 3
 
-    ```rust
-    use balance_monitor::{
-        Config, create_fallback_provider, FallbackConfig,
-        BalanceMonitor, BalanceMonitorConfig, log_balances,
-    };
+telegram:
+  bot_token: "your_token_here"
+  allowed_users:
+    - "all"  # Public bot
+  alerts:
+    balance_change: true
+    low_balance: true
 
-    #[tokio::main]
-    async fn main() -> eyre::Result<()> {
-        let config = Config::from_file("config.yaml")?;
+networks:
+  - name: Ethereum
+    chain_id: 1
+    rpc_nodes:
+      - https://eth.llamarpc.com
+    addresses:
+      - alias: Hot Wallet
+        address: 0xYourAddress1
+        min_balance_eth: 1.0
 
-        let provider_config = FallbackConfig::new(
-            config.rpc_nodes,
-            config.active_transport_count,
-        );
-        let provider = create_fallback_provider(provider_config)?;
+  - name: Polygon
+    chain_id: 137
+    rpc_nodes:
+      - https://polygon-rpc.com
+    addresses:
+      - alias: Cold Wallet
+        address: 0xYourAddress2
+        min_balance_eth: 10.0
 
-        let monitor_config = BalanceMonitorConfig::new(
-            config.addresses,
-            config.tokens,
-            config.interval_secs,
-        );
-        let monitor = BalanceMonitor::new(provider, monitor_config);
+  - name: Gnosis Chiado Testnet
+    chain_id: 10200
+    rpc_nodes:
+      - https://rpc.chiado.gnosis.gateway.fm
+    addresses:
+      - alias: Test Wallet
+        address: 0xYourAddress3
+        min_balance_eth: 0.1
+```
 
-        // Fetch data
-        let results = monitor.check().await;
+## Troubleshooting
 
-        // Log (optional)
-        log_balances(&results);
+### Bot Not Responding
 
-        Ok(())
-    }
-    ```
+1. Check that bot token is correct
+2. Verify your username is in `allowed_users` list (or use "all")
+3. Make sure you sent `/start` to the bot first
 
-    ### Custom logging
+### RPC Connection Issues
 
-    ```rust
-    // Monitor returns Vec<Result<BalanceInfo>>
-    let results = monitor.check().await;
+1. Check RPC endpoint availability
+2. Add more fallback RPC endpoints
+3. Increase `active_transport_count` for better reliability
+4. Check network connectivity
 
-    for result in results {
-        match result {
-            Ok(info) => {
-                // Your processing
-                println!("{}: {} ETH", info.alias, info.eth_formatted);
+### Missing Balance Changes
 
-                // Send to DB
-                // Send to Telegram
-                // Save to a file
-            }
-            Err(e) => eprintln!("Error: {}", e),
-        }
-    }
-    ```
+1. Verify `interval_secs` is set appropriately
+2. Check that `alerts.balance_change` is enabled
+3. Review console logs for errors
 
-    ### JSON logging
+### Too Many Low Balance Alerts
 
-    ```rust
-    use balance_monitor::log_balances_json;
+1. Alerts are automatically throttled (10min, 1hr, 5hr, 20hr intervals)
+2. Disable with `alerts.low_balance: false`
+3. Adjust `min_balance_eth` thresholds
 
-    loop {
-        let results = monitor.check().await;
-        log_balances_json(&results)?;
+## Security Considerations
 
-        tokio::time::sleep(monitor.interval()).await;
-    }
-    ```
+- Never commit `config.yaml` with real bot tokens to version control
+- Use `.gitignore` to exclude sensitive configuration files
+- Store bot tokens in environment variables for production
+- Limit bot access using `allowed_users` whitelist
+- Regularly rotate bot tokens
 
-    ## Examples
+## License
 
-    ### Single check
+MIT License
 
-    ```bash
-    cargo run --example single_check
-    ```
+## Support
 
-    ### JSON logger
-
-    ```bash
-    cargo run --example json_logger
-    ```
-
-    ## Run
-
-    ```bash
-    # Development
-    cargo run
-
-    # Release
-    cargo build --release
-    ./target/release/balance-monitor
-    ```
-
-    ## Architecture
-
-    ### Modules
-
-    - **config** - Load and validate YAML configuration
-    - **contracts** - Smart contract definitions (ERC-20)
-    - **providers** - Create RPC providers with fallback
-    - **monitoring** - Balance collection logic (no logging)
-    - **logger** - Displaying results (console, JSON)
-
-    ### Separation of concerns
-
-    **BalanceMonitor** only collects data:
-    ```rust
-    let results: Vec<Result<BalanceInfo>> = monitor.check().await;
-    ```
-
-    **Logger** only displays:
-    ```rust
-    log_balances(&results);       // Console
-    log_balances_json(&results)?; // JSON
-    ```
-
-    You can add your own logger without changing monitoring.
-
-    ### Single source of truth
-
-    All configuration lives in `config.yaml`. No hardcoded values and reasonable defaults.
-
-    ## Extending
-
-    ### Adding a new token
-
-    Add to `config.yaml`:
-
-    ```yaml
-    tokens:
-      - alias: MyToken
-        address: 0xTokenAddress
-    ```
-
-    ### Adding a new contract type
-
-    1. Create a file in `src/contracts/`
-    2. Define the interface with the `sol!` macro
-    3. Export it in `mod.rs`
-
-    Example:
-
-    ```rust
-    // src/contracts/uniswap.rs
-    use alloy::sol;
-
-    sol! {
-        #[sol(rpc)]
-        interface IUniswapV2Pair {
-            function getReserves() external view
-                returns (uint112, uint112, uint32);
-        }
-    }
-    ```
-
-    ## Dependencies
-
-    - `alloy 1.0` - Modern Ethereum library
-    - `tokio` - Async runtime
-    - `eyre` - Error handling
-    - `tower` - Middleware for fallback
-    - `serde` + `serde_yaml` - Configuration handling
-
-    ## License
-
-    MIT
+For issues and feature requests, please use the GitHub issue tracker.

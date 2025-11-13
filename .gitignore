@@ -2,3 +2,5 @@ target
 config.yaml
 balances.json
 telegram_chats.json
+
+alert_states.json

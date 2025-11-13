@@ -7,6 +7,21 @@ telegram:
   bot_token: "YOUR_BOT_TOKEN_HERE"  # Get from @BotFather
   allowed_users:  # Optional: limit bot access to specific users
     - "your_telegram_username"  # Without @
+    # Or use "all" to make bot public (no auth required):
+    # - "all"
+
+  # Alert settings (optional, all enabled by default)
+  alerts:
+    balance_change: true  # Send alerts when balance changes are detected
+    low_balance: true     # Send alerts when balance drops below threshold
+
+  # Daily report configuration (optional)
+  daily_report:
+    enabled: true  # Enable daily balance diff reports
+    time: "09:00"  # Time to send report (HH:MM format, 24-hour)
+
+  # Display settings (optional)
+  show_full_address: false  # Show full address (true) or shortened like 0xabcd...1234 (false, default)
 
 # Networks to monitor (required)
 networks:
@@ -21,29 +36,17 @@ networks:
     addresses:
       - alias: Vitalik
         address: 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
+        # min_balance_eth: 0.5  # Optional: Send alert if ETH balance drops below this value
       - alias: ETH2 Deposit
         address: 0x00000000219ab540356cBB839Cbe05303d7705Fa
+        # min_balance_eth: 10.0  # Optional: Alert threshold for low balance
     tokens:
       - alias: USDT
         address: 0xdAC17F958D2ee523a2206206994597C13D831ec7
+        # min_balance: 100.0  # Optional: Send alert if token balance drops below this value
       - alias: USDC
         address: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
-
-  # BSC Network
-  - name: BSC
-    chain_id: 56
-    rpc_nodes:
-      - https://bsc-dataseed.binance.org
-      - https://bsc-dataseed1.defibit.io
-      - https://bsc-dataseed2.defibit.io
-    addresses:
-      - alias: MyWallet
-        address: 0x0000000000000000000000000000000000000000
-    tokens:
-      - alias: BUSD
-        address: 0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56
-      - alias: USDT
-        address: 0x55d398326f99059fF775485246999027B3197955
+        # min_balance: 100.0  # Optional: Alert threshold for low token balance
 
   # Polygon Network
   - name: Polygon
@@ -54,4 +57,5 @@ networks:
     addresses:
       - alias: MyWallet
         address: 0x0000000000000000000000000000000000000000
+        # min_balance_eth: 1.0  # Optional: Alert if MATIC balance is low
     tokens: []  # No tokens to monitor

@@ -12,10 +12,30 @@ use std::time::Duration;
 pub struct AddressConfig {
     pub alias: String,
     pub address: Address,
+    /// Minimum ETH balance threshold for low balance alerts (optional)
+    #[serde(default)]
+    pub min_balance_eth: Option<f64>,
 }
 
-/// Token configuration (same as address)
-pub type TokenConfig = AddressConfig;
+/// Alert settings for different notification types
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AlertSettings {
+    /// Enable balance change alerts (default: true)
+    #[serde(default = "default_true")]
+    pub balance_change: bool,
+    /// Enable low balance alerts (default: true)
+    #[serde(default = "default_true")]
+    pub low_balance: bool,
+}
+
+impl Default for AlertSettings {
+    fn default() -> Self {
+        Self {
+            balance_change: true,
+            low_balance: true,
+        }
+    }
+}
 
 /// Telegram configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -23,6 +43,42 @@ pub struct TelegramConfig {
     pub bot_token: String,
     #[serde(default)]
     pub allowed_users: Vec<String>,
+    #[serde(default)]
+    pub daily_report: Option<DailyReportConfig>,
+    #[serde(default)]
+    pub alerts: AlertSettings,
+    /// Show full addresses instead of shortened (0xabcd...1234)
+    #[serde(default)]
+    pub show_full_address: bool,
+}
+
+/// Daily report configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DailyReportConfig {
+    /// Enable daily reports
+    #[serde(default = "default_true")]
+    pub enabled: bool,
+    /// Time of day to send report (in format "HH:MM", e.g. "09:00")
+    #[serde(default = "default_report_time")]
+    pub time: String,
+}
+
+fn default_true() -> bool {
+    true
+}
+
+fn default_report_time() -> String {
+    "09:00".to_string()
+}
+
+/// Token configuration with threshold
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TokenConfig {
+    pub alias: String,
+    pub address: Address,
+    /// Minimum token balance threshold for low balance alerts (optional)
+    #[serde(default)]
+    pub min_balance: Option<f64>,
 }
 
 /// Network configuration
@@ -50,6 +106,15 @@ pub struct Config {
     #[serde(default = "default_active_transport_count")]
     pub active_transport_count: NonZeroUsize,
     pub telegram: Option<TelegramConfig>,
+}
+
+impl Config {
+    /// Get alert settings from telegram config, or defaults if not configured
+    pub fn get_alert_settings(&self) -> AlertSettings {
+        self.telegram.as_ref()
+            .map(|t| t.alerts.clone())
+            .unwrap_or_default()
+    }
 }
 
 impl Config {
