@@ -1,4 +1,3 @@
-# Balance Monitor
 
 A Rust-based blockchain balance monitoring tool with Telegram notifications. Supports multiple EVM-compatible networks with fallback RPC endpoints and intelligent alert throttling.
 
