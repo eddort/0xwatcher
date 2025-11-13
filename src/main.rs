@@ -1,4 +1,4 @@
-use balance_monitor::{
+use Oxwatcher::{
     compare_balances, create_fallback_provider, log_balance_changes, AlertSettings, BalanceMonitor,
     BalanceMonitorConfig, BalanceStorage, Config, FallbackConfig, NetworkConfig, TelegramNotifier,
 };

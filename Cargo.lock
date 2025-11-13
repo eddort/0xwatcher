@@ -3,6 +3,24 @@
 version = 4
 
 [[package]]
+name = "Oxwatcher"
+version = "0.1.0"
+dependencies = [
+ "alloy",
+ "chrono",
+ "eyre",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "serde_yaml",
+ "teloxide",
+ "tokio",
+ "tokio-test",
+ "tower",
+]
+
+[[package]]
 name = "allocator-api2"
 version = "0.2.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1079,24 +1097,6 @@ name = "autocfg"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
-
-[[package]]
-name = "balance-monitor"
-version = "0.1.0"
-dependencies = [
- "alloy",
- "chrono",
- "eyre",
- "reqwest",
- "serde",
- "serde_json",
- "serde_with",
- "serde_yaml",
- "teloxide",
- "tokio",
- "tokio-test",
- "tower",
-]
 
 [[package]]
 name = "base16ct"

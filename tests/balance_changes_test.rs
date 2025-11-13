@@ -5,7 +5,7 @@ use alloy::{
     providers::{Provider, ProviderBuilder},
     rpc::types::TransactionRequest,
 };
-use balance_monitor::{compare_balances, BalanceInfo, BalanceStorage, TokenBalance, IERC20};
+use Oxwatcher::{compare_balances, BalanceInfo, BalanceStorage, TokenBalance, IERC20};
 use eyre::Result;
 
 // USDT contract address on Ethereum mainnet

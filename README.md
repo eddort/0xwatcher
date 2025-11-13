@@ -1,4 +1,4 @@
-
+# 0xWatcher
 A Rust-based blockchain balance monitoring tool with Telegram notifications. Supports multiple EVM-compatible networks with fallback RPC endpoints and intelligent alert throttling.
 
 ## Features
@@ -136,7 +136,7 @@ cargo run
 
 ```bash
 cargo build --release
-./target/release/balance-monitor
+./target/release/Oxwatcher
 ```
 
 ## Telegram Bot Commands
